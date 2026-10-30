@@ -57,9 +57,14 @@ class _MealPageState extends State<_MealPage> {
           height: 50,
           decoration: BoxDecoration(color: C.orange, borderRadius: BorderRadius.circular(15)),
           child: Row(children: [
-            IconButton(onPressed: () => setState(() => qty = qty > 1 ? qty - 1 : 1), icon: const Icon(Icons.remove_circle)),
-            Text('$qty', style: const TextStyle(fontWeight: FontWeight.w700)),
-            IconButton(onPressed: () => setState(() => qty++), icon: const Icon(Icons.add_circle)),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(children: [
+                IconButton(onPressed: () => setState(() => qty = qty > 1 ? qty - 1 : 1), icon: const Icon(Icons.remove_circle)),
+                Text('$qty', style: const TextStyle(fontWeight: FontWeight.w700)),
+                IconButton(onPressed: () => setState(() => qty++), icon: const Icon(Icons.add_circle)),
+              ]),
+            ),
             const Spacer(),
             Text('اطلب الآن ( ${m.price * qty} ريال )', style: const TextStyle(fontWeight: FontWeight.w800)),
             const SizedBox(width: 16),
