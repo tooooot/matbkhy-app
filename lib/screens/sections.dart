@@ -19,15 +19,9 @@ class SectionsScreen extends StatelessWidget {
                   Text('${s.$2} فيديو', style: const TextStyle(fontSize: 11, color: C.muted)),
                 ]),
                 const SizedBox(height: 8),
-                Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(19),
-                    gradient: LinearGradient(colors: [
-                      HSLColor.fromAHSL(1, (s.$2 * 11 % 360).toDouble(), .5, .3).toColor(), C.card,
-                    ]),
-                  ),
-                  child: const Center(child: Icon(Icons.restaurant, size: 40, color: Colors.white54)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(19),
+                  child: Image.asset('assets/img/${s.$3}.jpg', height: 150, width: double.infinity, fit: BoxFit.cover),
                 ),
               ]),
             ),

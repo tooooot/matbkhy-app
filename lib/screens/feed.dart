@@ -26,11 +26,10 @@ class _MealPageState extends State<_MealPage> {
   Widget build(BuildContext context) {
     final m = widget.m;
     return Stack(fit: StackFit.expand, children: [
-      DecoratedBox(
+      Image.asset(m.img, fit: BoxFit.cover),
+      const DecoratedBox(
         decoration: BoxDecoration(
-          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
-            HSLColor.fromAHSL(1, m.hue * 1.0, .55, .28).toColor(), C.bg,
-          ]),
+          gradient: LinearGradient(begin: Alignment.center, end: Alignment.bottomCenter, colors: [Colors.transparent, Color(0xDD000000)]),
         ),
       ),
       const Center(child: Icon(Icons.play_circle_fill_rounded, size: 84, color: C.orange)),

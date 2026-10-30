@@ -30,7 +30,7 @@ class _Row extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(15)),
         child: Row(children: [
-          Container(width: 64, height: 64, decoration: BoxDecoration(color: C.field, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.fastfood, color: C.orange)),
+          ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(m.img, width: 64, height: 64, fit: BoxFit.cover)),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(m.title, style: const TextStyle(fontWeight: FontWeight.w700)),

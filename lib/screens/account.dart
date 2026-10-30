@@ -20,7 +20,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
         body: ListView(children: [
           const SizedBox(height: 12),
-          const Center(child: CircleAvatar(radius: 42, backgroundColor: C.field, child: Icon(Icons.person, size: 44))),
+          const Center(child: CircleAvatar(radius: 42, backgroundImage: AssetImage('assets/img/chef.jpg'))),
           const SizedBox(height: 8),
           Center(child: Text('فاطمة محمد', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
           const Center(child: Text('@fyf865564bgjhj', style: TextStyle(color: C.line, fontSize: 12))),
@@ -39,7 +39,7 @@ class _AccountScreenState extends State<AccountScreen> {
           if (role == 'طاهٍ')
             GridView.count(
               shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 2, padding: const EdgeInsets.all(12), mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: .8,
-              children: [for (final m in meals) Container(decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(15)), alignment: Alignment.bottomRight, padding: const EdgeInsets.all(8), child: Text('${m.title}\n${m.price} ر.س', style: const TextStyle(fontSize: 12)))],
+              children: [for (final m in meals) ClipRRect(borderRadius: BorderRadius.circular(15), child: Stack(fit: StackFit.expand, children: [Image.asset(m.img, fit: BoxFit.cover), Container(alignment: Alignment.bottomRight, padding: const EdgeInsets.all(8), color: Colors.black38, child: Text('${m.title}\n${m.price} ر.س', style: const TextStyle(fontSize: 12)))]))],
             )
           else
             Padding(padding: const EdgeInsets.all(24), child: Text(role == 'كابتن' ? 'لا توجد توصيلات الآن' : 'لا توجد طلبات جديدة', textAlign: TextAlign.center, style: const TextStyle(color: C.muted))),

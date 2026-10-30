@@ -1,8 +1,11 @@
 /// بيانات تجريبية للنسخة الأولى حتى تُربط الخلفية.
+const _imgs = ['chop', 'grill', 'fried', 'bread', 'pasta', 'salad', 'pancake', 'brunch'];
+
 class Meal {
   final String id, title, chef, area, tag, desc;
   final int price, likes, comments;
   final int hue;
+  String get img => 'assets/img/${_imgs[int.parse(id) % _imgs.length]}.jpg';
   const Meal(this.id, this.title, this.chef, this.area, this.tag, this.desc, this.price, this.likes, this.comments, this.hue);
 }
 
@@ -13,4 +16,4 @@ const meals = <Meal>[
   Meal('4', 'ورق عنب', 'أكلات هنية', 'مركز الطائف، الحي الخامس', 'مأكولات سورية', 'ورق عنب محشي بالزيت', 48, 150, 12, 10),
 ];
 
-const sections = <(String, int)>[('مأكولات عربية', 20), ('مأكولات سورية', 20), ('مأكولات أردنية', 20), ('حلويات', 14), ('مشروبات', 9)];
+const sections = <(String, int, String)>[('مأكولات عربية', 20, 'brunch'), ('مأكولات سورية', 20, 'fried'), ('مأكولات أردنية', 20, 'bread'), ('حلويات', 14, 'pancake'), ('مشروبات', 9, 'salad')];
