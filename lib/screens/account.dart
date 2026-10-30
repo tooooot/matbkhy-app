@@ -1,71 +1,106 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../api.dart';
 import '../data.dart';
 import '../theme.dart';
+import '../widgets.dart';
+import 'orders.dart';
 
-/// الحساب: الملف الشخصي (بيانات) مفصول عن الإعدادات؛ وتبديل الدور مستخدم / طاهٍ / كابتن.
+/// الحساب: الملف الشخصي مفصول عن الإعدادات؛ الأدوار الفعلية من النواة (مستخدم / طاهٍ / كابتن).
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({super.key});
+  final VoidCallback onSignedOut;
+  const AccountScreen({super.key, required this.onSignedOut});
   @override
   State<AccountScreen> createState() => _AccountScreenState();
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  String role = 'مستخدم';
+  String role = 'user';
+
+  List<(String, String)> get roles {
+    final me = Api.me!;
+    return [('user', 'مستخدم'), if (me.has('chef')) ('chef', 'طاهٍ'), if (me.has('captain')) ('captain', 'كابتن')];
+  }
+
+  Future<void> _request(String r) async {
+    try {
+      await Api.requestRole(r, '');
+      if (mounted) toast(context, 'وصل طلبك، سيراجعه المدير');
+    } catch (e) {
+      if (mounted) toast(context, '$e');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('حسابي'),
-          actions: [IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () => _settings(context))],
-        ),
-        body: ListView(children: [
-          const SizedBox(height: 12),
-          const Center(child: CircleAvatar(radius: 42, backgroundImage: AssetImage('assets/img/chef.jpg'))),
-          const SizedBox(height: 8),
-          Center(child: Text('فاطمة محمد', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
-          const Center(child: Text('@fyf865564bgjhj', style: TextStyle(color: C.line, fontSize: 12))),
-          const SizedBox(height: 16),
-          const Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [_Stat('8700', 'إعجاب'), _Stat('5000', 'متابع'), _Stat('505k', 'يتابع')]),
-          const SizedBox(height: 16),
+  Widget build(BuildContext context) {
+    final me = Api.me;
+    if (me == null) return const Center(child: Text('تعذّر تحميل الحساب'));
+    final rs = roles;
+    if (!rs.any((r) => r.$1 == role)) role = 'user';
+    return Scaffold(
+      appBar: AppBar(title: const Text('حسابي'), actions: [IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () => _settings(context))]),
+      body: ListView(children: [
+        const SizedBox(height: 12),
+        const Center(child: CircleAvatar(radius: 42, backgroundColor: C.field, child: Icon(Icons.person, size: 44))),
+        const SizedBox(height: 8),
+        Center(child: Text(me.name.isEmpty ? 'مستخدم مطبخي' : me.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800))),
+        Center(child: Text(me.email, style: const TextStyle(color: C.line, fontSize: 12))),
+        const SizedBox(height: 16),
+        if (rs.length > 1)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SegmentedButton<String>(
-              segments: const [ButtonSegment(value: 'مستخدم', label: Text('مستخدم')), ButtonSegment(value: 'طاهٍ', label: Text('طاهٍ')), ButtonSegment(value: 'كابتن', label: Text('كابتن'))],
+              segments: [for (final r in rs) ButtonSegment(value: r.$1, label: Text(r.$2))],
               selected: {role},
               onSelectionChanged: (s) => setState(() => role = s.first),
             ),
           ),
-          const SizedBox(height: 16),
-          if (role == 'طاهٍ')
-            GridView.count(
-              shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 2, padding: const EdgeInsets.all(12), mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: .8,
-              children: [for (final m in meals) ClipRRect(borderRadius: BorderRadius.circular(15), child: Stack(fit: StackFit.expand, children: [Image.asset(m.img, fit: BoxFit.cover), Container(alignment: Alignment.bottomRight, padding: const EdgeInsets.all(8), color: Colors.black38, child: Text('${m.title}\n${m.price} ر.س', style: const TextStyle(fontSize: 12)))]))],
-            )
-          else
-            Padding(padding: const EdgeInsets.all(24), child: Text(role == 'كابتن' ? 'لا توجد توصيلات الآن' : 'لا توجد طلبات جديدة', textAlign: TextAlign.center, style: const TextStyle(color: C.muted))),
-        ]),
-      );
+        const SizedBox(height: 12),
+        if (role == 'chef')
+          SizedBox(height: 520, child: Load<Order>(fetch: Api.chefOrders, empty: 'لا توجد طلبات جديدة', builder: (_, os) => OrderList(os, actions: _chefActions)))
+        else if (role == 'captain')
+          SizedBox(height: 520, child: Load<Order>(fetch: Api.captainOrders, empty: 'لا توجد توصيلات الآن', builder: (_, os) => OrderList(os, actions: _capActions)))
+        else
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(children: [
+              if (!me.has('chef')) OutlinedButton(onPressed: () => _request('chef'), child: const Text('اطلب أن تصبح طاهياً وانشر وجباتك')),
+              if (!me.has('captain')) OutlinedButton(onPressed: () => _request('captain'), child: const Text('اطلب أن تصبح كابتن توصيل')),
+            ]),
+          ),
+      ]),
+    );
+  }
+
+  List<(String, String)> _chefActions(Order o) => switch (o.status) { 'pending' => [('accepted', 'قبول'), ('rejected', 'رفض')], 'accepted' => [('ready', 'جاهز')], _ => [] };
+  List<(String, String)> _capActions(Order o) => switch (o.status) { 'ready' => [('picked', 'استلام')], 'picked' => [('delivered', 'تم التسليم')], _ => [] };
 
   void _settings(BuildContext c) => showModalBottomSheet(
         context: c, backgroundColor: C.card,
         builder: (_) => Column(mainAxisSize: MainAxisSize.min, children: [
-          const ListTile(leading: Icon(Icons.notifications_none), title: Text('الإشعارات')),
-          const ListTile(leading: Icon(Icons.delete_outline), title: Text('حذف الحساب')),
+          ListTile(
+            leading: const Icon(Icons.delete_outline), title: const Text('حذف الحساب'),
+            onTap: () async {
+              final ok = await showDialog<bool>(
+                context: c,
+                builder: (d) => AlertDialog(
+                  backgroundColor: C.card, title: const Text('حذف الحساب نهائياً؟'), content: const Text('لا يمكن التراجع عن الحذف.'),
+                  actions: [TextButton(onPressed: () => Navigator.pop(d, false), child: const Text('إلغاء')), TextButton(onPressed: () => Navigator.pop(d, true), child: const Text('حذف', style: TextStyle(color: C.orange)))],
+                ),
+              );
+              if (ok != true) return;
+              await Api.deleteAccount();
+              if (c.mounted) Navigator.of(c).pop();
+              widget.onSignedOut();
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.logout), title: const Text('تسجيل الخروج'),
             onTap: () async {
-              final p = await SharedPreferences.getInstance();
-              await p.setBool('signedIn', false);
-              if (c.mounted) Navigator.of(c).popUntil((r) => r.isFirst);
+              await Api.signOut();
+              if (c.mounted) Navigator.of(c).pop();
+              widget.onSignedOut();
             },
           ),
         ]),
       );
-}
-
-class _Stat extends StatelessWidget {
-  final String n, l;
-  const _Stat(this.n, this.l);
-  @override
-  Widget build(BuildContext context) => Column(children: [Text(n, style: const TextStyle(fontWeight: FontWeight.w800)), Text(l, style: const TextStyle(fontSize: 11, color: C.line))]);
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../api.dart';
 import '../theme.dart';
+import '../widgets.dart';
 import 'feed.dart';
 import 'sections.dart';
 import 'orders.dart';
@@ -7,7 +9,8 @@ import 'account.dart';
 
 /// الشريط السفلي الثابت: المنتجات، الأقسام، (+ نشر)، طلباتي، حسابي.
 class Shell extends StatefulWidget {
-  const Shell({super.key});
+  final VoidCallback onSignedOut;
+  const Shell({super.key, required this.onSignedOut});
   @override
   State<Shell> createState() => _ShellState();
 }
@@ -16,13 +19,13 @@ class _ShellState extends State<Shell> {
   int i = 0;
   @override
   Widget build(BuildContext context) {
-    const pages = [FeedScreen(), SectionsScreen(), OrdersScreen(), AccountScreen()];
+    final pages = [const FeedScreen(), const SectionsScreen(), const OrdersScreen(), AccountScreen(onSignedOut: widget.onSignedOut)];
     return Scaffold(
       body: pages[i],
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         backgroundColor: C.orange, foregroundColor: Colors.white, shape: const CircleBorder(),
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('نشر وجبة بفيديو — قريباً'))),
+        onPressed: () => toast(context, Api.me != null && Api.me!.has("chef") ? "رفع الفيديو يُفعَّل عند تهيئة التخزين" : "انشر وجباتك: اطلب دور طاهٍ من حسابي"),
         child: const Icon(Icons.add, size: 32),
       ),
       bottomNavigationBar: BottomAppBar(

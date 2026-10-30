@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'api.dart';
 import 'screens/login.dart';
 import 'screens/shell.dart';
 import 'theme.dart';
@@ -25,7 +25,7 @@ class MatbkhyApp extends StatelessWidget {
       );
 }
 
-/// يقرّر: تمهيد (أول مرة) ← دخول ← التطبيق.
+/// يقرأ الجلسة المحفوظة ثم يفتح التطبيق أو شاشة الدخول.
 class Boot extends StatefulWidget {
   const Boot({super.key});
   @override
@@ -33,18 +33,20 @@ class Boot extends StatefulWidget {
 }
 
 class _BootState extends State<Boot> {
-  bool? signedIn;
+  bool loaded = false;
   @override
   void initState() {
     super.initState();
-    SharedPreferences.getInstance().then((p) {
-      if (mounted) setState(() => signedIn = p.getBool('signedIn') ?? false);
+    Api.load().whenComplete(() {
+      if (mounted) setState(() => loaded = true);
     });
   }
 
+  void refresh() => setState(() {});
+
   @override
   Widget build(BuildContext context) {
-    if (signedIn == null) return const Scaffold(body: Center(child: CircularProgressIndicator(color: C.orange)));
-    return signedIn! ? const Shell() : LoginScreen(onDone: () => setState(() => signedIn = true));
+    if (!loaded) return const Scaffold(body: Center(child: CircularProgressIndicator(color: C.orange)));
+    return Api.signedIn ? Shell(onSignedOut: refresh) : LoginScreen(onDone: refresh);
   }
 }
